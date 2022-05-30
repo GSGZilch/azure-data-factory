@@ -1,0 +1,129 @@
+{
+	"name": "PL - Load to Warehouse",
+	"properties": {
+		"activities": [
+			{
+				"name": "Load to Staging",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_adls_csv",
+						"type": "DatasetReference",
+						"parameters": {
+							"tier": "silver",
+							"folderPath": {
+								"value": "@{pipeline().parameters.dataSourceID}/@{pipeline().parameters.databaseSchema}/@{pipeline().parameters.tableName}/@{formatDateTime(pipeline().parameters.dateAndTimeOfImport, 'yyyy/MM/dd')}/csv/",
+								"type": "Expression"
+							},
+							"filePath": {
+								"value": "@{pipeline().parameters.tableName}_@{formatDateTime(pipeline().parameters.dateAndTimeOfImport, 'yyyyMMdd-hhmmss')}.csv",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_sqldb_warehouse",
+						"type": "DatasetReference",
+						"parameters": {
+							"databaseSchema": "stg",
+							"tableName": {
+								"value": "@pipeline().parameters.tableName",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Load to Prod",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Load to Staging",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": {
+						"value": "LoadToProd_@{pipeline().parameters.tableName}",
+						"type": "Expression"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_sqldb_warehouse",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"dataSourceId": {
+				"type": "string"
+			},
+			"dateAndTimeOfImport": {
+				"type": "string"
+			},
+			"tableName": {
+				"type": "string"
+			},
+			"databaseSchema": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "P03 - Load to Warehouse"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-05-30T14:44:59Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

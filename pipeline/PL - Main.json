@@ -1,0 +1,84 @@
+{
+	"name": "PL - Main",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL - P01 - Data Ingestion",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL - P01 - Data Ingestion",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"dataSourceId": "01_100",
+						"dateAndTimeOfImport": {
+							"value": "@pipeline().TriggerTime",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "PL - P02 - Data Transformation",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "PL - P01 - Data Ingestion",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL - P02 - Data Transformation",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"dataSourceId": "01_100",
+						"dateAndTimeOfImport": {
+							"value": "@pipeline().TriggerTime",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "PL - P03 - Load to Warehouse",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "PL - P02 - Data Transformation",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL - P03 - Load to Warehouse",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"dataSourceId": "01_100",
+						"dateAndTimeOfImport": {
+							"value": "@pipeline().TriggerTime",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-05-30T14:32:14Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

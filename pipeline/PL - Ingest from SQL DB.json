@@ -1,0 +1,151 @@
+{
+	"name": "PL - Ingest from SQL DB",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get SQL Table Names",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT [name] as tableName, SCHEMA_NAME(schema_id) FROM sys.tables\nWHERE SCHEMA_NAME(schema_id) = '@{pipeline().parameters.databaseSchema}'\nORDER BY 1 DESC;",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "ds_sqldb_source",
+						"type": "DatasetReference",
+						"parameters": {
+							"databaseSchema": "dummy",
+							"tableName": "dummy"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "Ingest Data For Each Table",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get SQL Table Names",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get SQL Table Names').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Ingest SQL Source to Bronze",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_sqldb_source",
+									"type": "DatasetReference",
+									"parameters": {
+										"databaseSchema": {
+											"value": "@pipeline().parameters.databaseSchema",
+											"type": "Expression"
+										},
+										"tableName": {
+											"value": "@item().tableName",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_adls_csv",
+									"type": "DatasetReference",
+									"parameters": {
+										"tier": "bronze",
+										"folderPath": {
+											"value": "@{pipeline().parameters.dataSourceID}/@{pipeline().parameters.databaseSchema}/@{item().tableName}/@{formatDateTime(pipeline().parameters.dateAndTimeOfImport, 'yyyy/MM/dd')}",
+											"type": "Expression"
+										},
+										"filePath": {
+											"value": "@{item().tableName}_@{formatDateTime(pipeline().parameters.dateAndTimeOfImport, 'yyyyMMdd-hhmmss')}.csv",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"databaseSchema": {
+				"type": "string"
+			},
+			"dataSourceId": {
+				"type": "string"
+			},
+			"dateAndTimeOfImport": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "P01 - Data Ingestion"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-05-30T13:08:44Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

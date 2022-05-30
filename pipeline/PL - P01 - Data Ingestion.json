@@ -1,0 +1,45 @@
+{
+	"name": "PL - P01 - Data Ingestion",
+	"properties": {
+		"activities": [
+			{
+				"name": "01_100 - SalesLT - Ingestion",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL - Ingest from SQL DB",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"databaseSchema": "SalesLT",
+						"dataSourceId": {
+							"value": "@pipeline().parameters.dataSourceId",
+							"type": "Expression"
+						},
+						"dateAndTimeOfImport": {
+							"value": "@pipeline().parameters.dateAndTimeOfImport",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"dataSourceId": {
+				"type": "string"
+			},
+			"dateAndTimeOfImport": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "_LoadEntity"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-05-30T12:30:07Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

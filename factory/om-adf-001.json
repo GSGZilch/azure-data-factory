@@ -1,0 +1,9 @@
+{
+	"name": "om-adf-001",
+	"location": "westeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "4cac6c3a-1b7f-4363-a255-5883f1337f5d",
+		"tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47"
+	}
+}

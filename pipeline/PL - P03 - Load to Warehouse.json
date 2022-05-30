@@ -1,0 +1,46 @@
+{
+	"name": "PL - P03 - Load to Warehouse",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL - Load to Warehouse - dimCustomer",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL - Load to Warehouse",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"dataSourceId": {
+							"value": "@pipeline().parameters.dataSourceId",
+							"type": "Expression"
+						},
+						"dateAndTimeOfImport": {
+							"value": "@pipeline().parameters.dateAndTimeOfImport",
+							"type": "Expression"
+						},
+						"tableName": "dimCustomer",
+						"databaseSchema": "SalesLT"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"dataSourceId": {
+				"type": "string"
+			},
+			"dateAndTimeOfImport": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "_LoadEntity"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-05-30T14:44:59Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

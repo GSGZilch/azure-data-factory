@@ -1,0 +1,91 @@
+{
+	"name": "DF - Join Order Data",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_example_order_header",
+						"type": "DatasetReference"
+					},
+					"name": "ReadOrderHeader"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_example_order_detail",
+						"type": "DatasetReference"
+					},
+					"name": "ReadOrderDetail"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_example_order_output",
+						"type": "DatasetReference"
+					},
+					"name": "WriteOrderData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "JoinOrderData"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          SalesOrderID as string,",
+				"          RevisionNumber as string,",
+				"          OrderDate as string,",
+				"          DueDate as string,",
+				"          ShipDate as string,",
+				"          Status as string,",
+				"          OnlineOrderFlag as string,",
+				"          SalesOrderNumber as string,",
+				"          PurchaseOrderNumber as string,",
+				"          AccountNumber as string,",
+				"          CustomerID as string,",
+				"          ShipToAddressID as string,",
+				"          BillToAddressID as string,",
+				"          ShipMethod as string,",
+				"          CreditCardApprovalCode as string,",
+				"          SubTotal as string,",
+				"          TaxAmt as string,",
+				"          Freight as string,",
+				"          TotalDue as string,",
+				"          Comment as string,",
+				"          rowguid as string,",
+				"          ModifiedDate as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> ReadOrderHeader",
+				"source(output(",
+				"          SalesOrderID as string,",
+				"          SalesOrderDetailID as string,",
+				"          OrderQty as string,",
+				"          ProductID as string,",
+				"          UnitPrice as string,",
+				"          UnitPriceDiscount as string,",
+				"          LineTotal as string,",
+				"          rowguid as string,",
+				"          ModifiedDate as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> ReadOrderDetail",
+				"ReadOrderHeader, ReadOrderDetail join(ReadOrderHeader@SalesOrderID == ReadOrderDetail@SalesOrderID,",
+				"     joinType:'left',",
+				"     broadcast: 'auto')~> JoinOrderData",
+				"JoinOrderData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> WriteOrderData"
+			]
+		}
+	}
+}
